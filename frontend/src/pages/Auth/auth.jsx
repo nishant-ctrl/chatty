@@ -7,7 +7,9 @@ import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { apiClient } from "@/lib/api-client";
 import { LOGIN_ROUTE, SIGNUP_ROUTE } from "@/utils/constants";
+import { useNavigate } from "react-router-dom";
 function Auth() {
+    const navigate=useNavigate()
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
     const [confirmPassword, setConfirmPassword] = useState("");
@@ -46,8 +48,14 @@ function Auth() {
                 { email, password },
                 { withCredentials: true }
             );
-            // console.log(response);
-            
+            console.log(response.data.data.user);
+            if(response.data?.data.user._id){
+                if(response.data?.data.user.profileSetup){
+                    navigate("/chat")
+                }else{
+                    navigate("/profile")
+                }
+            }
         }
     };
     const handleSignup = async () => {
@@ -58,6 +66,9 @@ function Auth() {
                 { withCredentials: true }
             );
             // console.log(response);
+            if(response.status===201){
+                navigate("./profile")
+            }
         }
     };
 
