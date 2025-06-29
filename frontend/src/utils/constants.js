@@ -1,5 +1,5 @@
 export const HOST=import.meta.env.VITE_SERVER_URL
 
 export const AUTH_ROUTES = `api/v1/user`;
-export const LOGIN_ROUTE = `${HOST}/${AUTH_ROUTES}/login`;
-export const SIGNUP_ROUTE = `${HOST}/${AUTH_ROUTES}/register`;
+export const LOGIN_ROUTE = `${AUTH_ROUTES}/login`;
+export const SIGNUP_ROUTE = `${AUTH_ROUTES}/register`;

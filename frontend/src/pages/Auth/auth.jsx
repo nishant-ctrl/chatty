@@ -46,7 +46,7 @@ function Auth() {
                 { email, password },
                 { withCredentials: true }
             );
-            console.log(response);
+            // console.log(response);
             
         }
     };
