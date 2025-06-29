@@ -6,37 +6,58 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { apiClient } from "@/lib/api-client";
-import { SIGNUP_ROUTE } from "@/utils/constants";
+import { LOGIN_ROUTE, SIGNUP_ROUTE } from "@/utils/constants";
 function Auth() {
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
     const [confirmPassword, setConfirmPassword] = useState("");
 
-    const validateSignup=()=>{
-        if(!email.length){
-            toast.error("Email is required.")
-            return false
+    const validateSignup = () => {
+        if (!email.length) {
+            toast.error("Email is required.");
+            return false;
         }
-        if(!password.length){
-            toast.error("Password is required.")
-            return false
+        if (!password.length) {
+            toast.error("Password is required.");
+            return false;
         }
-        if(password!==confirmPassword) {
-            toast.error("Password and confirm password should be same.")
-            return false
+        if (password !== confirmPassword) {
+            toast.error("Password and confirm password should be same.");
+            return false;
         }
         return true;
-    }
+    };
+    const validateLogin = () => {
+        if (!email.length) {
+            toast.error("Email is required.");
+            return false;
+        }
+        if (!password.length) {
+            toast.error("Password is required.");
+            return false;
+        }
+        return true;
+    };
 
-
-
-
-    const handleLogin = async () => {};
-    const handleSignup = async () => {
-        if(validateSignup()){
-            const response = await apiClient.post(SIGNUP_ROUTE,{email,password})
+    const handleLogin = async () => {
+        if (validateLogin()) {
+            const response = await apiClient.post(
+                LOGIN_ROUTE,
+                { email, password },
+                { withCredentials: true }
+            );
             console.log(response);
             
+        }
+    };
+    const handleSignup = async () => {
+        if (validateSignup()) {
+            const response = await apiClient.post(
+                SIGNUP_ROUTE,
+                { email, password },
+                { withCredentials: true }
+            );
+            // console.log(response);
         }
     };
 
