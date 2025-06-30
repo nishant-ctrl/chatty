@@ -187,7 +187,6 @@ function Auth() {
                 {/* <div className="hidden xl:flex justify-center items-center" >
                     <img src={Background} alt="background login image" className="h-auto"/>
                 </div> */}
-                <div>{userInfo.email}</div>
             </div>
         </div>
     );

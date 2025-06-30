@@ -85,13 +85,32 @@ const loginUser = asyncHandler(async (req, res) => {
         );
 });
 
-const getUserInfo=asyncHandler(async (req,res) => {
+const getUserInfo = asyncHandler(async (req, res) => {
     return res
         .status(200)
         .json(
             new ApiResponse(200, req.user, "Current user fetched successfully")
         );
-})
+});
+const updateProfile = asyncHandler(async (req, res) => {
+    const { firstName, lastName, color } = req.body;
+    if (!firstName || !lastName || color===undefined)
+        throw new ApiError(400, "Fields are required for updation");
+    const user = await User.findByIdAndUpdate(
+        req.user?._id,
+        {
+            $set: {
+                firstName,
+                lastName,
+                color,
+                profileSetup:true,
+            },
+        },
+        { new: true }
+    ).select("-password");
+    res.status(200).json(
+        new ApiResponse(200, user, "Account details updated successfully")
+    );
+});
 
-
-export { registerUser, loginUser, getUserInfo };
+export { registerUser, loginUser, getUserInfo, updateProfile };

@@ -20,6 +20,8 @@ function App() {
                     setUserInfo(response?.data?.data);
             } catch (error) {
                 console.log("Erroe wile fetching user data: ", error);
+            } finally {
+                setLoading(false);
             }
         };
         if (!userInfo) {
@@ -36,11 +38,7 @@ function App() {
             </div>
         );
 
-    return (
-        <>
-            <Outlet></Outlet>
-        </>
-    );
+    return <Outlet />;
 }
 
 export default App;
