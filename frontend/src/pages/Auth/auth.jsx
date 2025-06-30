@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import Background from "../../assets/login2.png";
+
 import Victory from "../../assets/victory.svg";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
@@ -8,11 +8,14 @@ import { toast } from "sonner";
 import { apiClient } from "@/lib/api-client";
 import { LOGIN_ROUTE, SIGNUP_ROUTE } from "@/utils/constants";
 import { useNavigate } from "react-router-dom";
+import { useAppStore } from "@/store";
 function Auth() {
-    const navigate=useNavigate()
+    const navigate = useNavigate();
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
     const [confirmPassword, setConfirmPassword] = useState("");
+
+    const {userInfo, setUserInfo } = useAppStore();
 
     const validateSignup = () => {
         if (!email.length) {
@@ -48,16 +51,18 @@ function Auth() {
                 { email, password },
                 { withCredentials: true }
             );
-            console.log(response.data.data.user);
-            if(response.data?.data.user._id){
-                if(response.data?.data.user.profileSetup){
-                    navigate("/chat")
-                }else{
-                    navigate("/profile")
+            // console.log(response.data.data.user);
+            if (response.data?.data.user._id) {
+                setUserInfo(response.data.data.user);
+                if (response.data?.data.user.profileSetup) {
+                    navigate("/chat");
+                } else {
+                    navigate("/profile");
                 }
             }
         }
     };
+
     const handleSignup = async () => {
         if (validateSignup()) {
             const response = await apiClient.post(
@@ -66,8 +71,9 @@ function Auth() {
                 { withCredentials: true }
             );
             // console.log(response);
-            if(response.status===201){
-                navigate("./profile")
+            if (response.status === 201) {
+                setUserInfo(response.data?.data);
+                navigate("/profile");
             }
         }
     };
@@ -181,6 +187,7 @@ function Auth() {
                 {/* <div className="hidden xl:flex justify-center items-center" >
                     <img src={Background} alt="background login image" className="h-auto"/>
                 </div> */}
+                <div>{userInfo.email}</div>
             </div>
         </div>
     );

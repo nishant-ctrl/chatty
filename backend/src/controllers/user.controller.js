@@ -85,4 +85,13 @@ const loginUser = asyncHandler(async (req, res) => {
         );
 });
 
-export { registerUser, loginUser };
+const getUserInfo=asyncHandler(async (req,res) => {
+    return res
+        .status(200)
+        .json(
+            new ApiResponse(200, req.user, "Current user fetched successfully")
+        );
+})
+
+
+export { registerUser, loginUser, getUserInfo };
