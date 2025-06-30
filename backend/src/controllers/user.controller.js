@@ -2,7 +2,10 @@ import { asyncHandler } from "../utils/asyncHandler.js";
 import { ApiError } from "../utils/ApiError.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import { User } from "../models/user.model.js";
-
+import {
+    uploadOnCloudinary,
+    deleteFromCloudinary,
+} from "../utils/cloudinary.js";
 const generateAccessAndRefreshTokens = async (userId) => {
     try {
         const user = await User.findById(userId);
@@ -94,7 +97,7 @@ const getUserInfo = asyncHandler(async (req, res) => {
 });
 const updateProfile = asyncHandler(async (req, res) => {
     const { firstName, lastName, color } = req.body;
-    if (!firstName || !lastName || color===undefined)
+    if (!firstName || !lastName || color === undefined)
         throw new ApiError(400, "Fields are required for updation");
     const user = await User.findByIdAndUpdate(
         req.user?._id,
@@ -103,7 +106,7 @@ const updateProfile = asyncHandler(async (req, res) => {
                 firstName,
                 lastName,
                 color,
-                profileSetup:true,
+                profileSetup: true,
             },
         },
         { new: true }
@@ -112,5 +115,64 @@ const updateProfile = asyncHandler(async (req, res) => {
         new ApiResponse(200, user, "Account details updated successfully")
     );
 });
+const addProfileImage = asyncHandler(async (req, res) => {
+    // console.log(req.file)
+    const avatarLocalPath = req.file?.path;
+    // const avatarLocalPath = req.files?.avatar?.[0]?.path;
+    if (!avatarLocalPath)
+        throw new ApiError(400, "Profile image is required for updation");
+    const profileImage = await uploadOnCloudinary(avatarLocalPath);
+    if (!profileImage)
+        throw new ApiError(502, "Error while uploading on profile image");
 
-export { registerUser, loginUser, getUserInfo, updateProfile };
+    const isDeleted = await deleteFromCloudinary(req.user.image);
+    if (!isDeleted)
+        console.log(
+            "Sommething went wrong while deleting the old avatar from cloudinary"
+        );
+
+    const user = await User.findByIdAndUpdate(
+        req.user?._id,
+        {
+            $set: {
+                image: profileImage.url,
+            },
+        },
+        { new: true }
+    ).select("-password");
+
+    return res
+        .status(200)
+        .json(
+            new ApiResponse(200, user, "Profile Image updated successfullu]y")
+        );
+});
+const removeProfileImage = asyncHandler(async (req, res) => {
+    const user = await User.findByIdAndUpdate(
+        req.user?._id,
+        {
+            $set: {
+                image: "",
+            },
+        },
+        { new: true }
+    ).select("-password");
+    const isDeleted = await deleteFromCloudinary(req.user.image);
+    if (!isDeleted)
+        console.log(
+            "Sommething went wrong while deleting the old avatar from cloudinary"
+        );
+    return res
+        .status(200)
+        .json(
+            new ApiResponse(200, user, "Profile Image deleted successfullu]y")
+        );
+});
+export {
+    registerUser,
+    loginUser,
+    getUserInfo,
+    updateProfile,
+    addProfileImage,
+    removeProfileImage,
+};
