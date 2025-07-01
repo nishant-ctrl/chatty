@@ -19,7 +19,7 @@ const uploadOnCloudinary = async (localFilePath) => {
         const response = await cloudinary.uploader.upload(localFilePath, {
             resource_type: "auto",
         });
-        console.log("TEST")
+        // console.log("TEST")
         // console.log(
         //     "File is uploaded on Cloudinary Successfully ",
         //     response.url
@@ -39,7 +39,7 @@ const uploadOnCloudinary = async (localFilePath) => {
 const deleteFromCloudinary = async (url) => {
     try {
         const publicId = extractPublicId(url);
-        if (!publicId) console.log("Error while getting");
+        if (!publicId) console.log("Error while getting public id from cloudinary url");
 
         const response = await cloudinary.uploader.destroy(publicId);
         // console.log("Deleted");

@@ -4,6 +4,7 @@ import { Outlet } from "react-router-dom";
 import { useAppStore } from "./store";
 import { apiClient } from "./lib/api-client";
 import { GET_USER_INFO } from "./utils/constants";
+import LoadingSpinner from "./components/ui/loadingSpinner";
 
 function App() {
     const { userInfo, setUserInfo } = useAppStore();
@@ -32,12 +33,7 @@ function App() {
     }, [userInfo, setUserInfo]);
 
     if (loading)
-        return (
-            <div>
-                <h1>Loading....</h1>
-            </div>
-        );
-
+        return <LoadingSpinner />
     return <Outlet />;
 }
 

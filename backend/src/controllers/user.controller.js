@@ -125,12 +125,14 @@ const addProfileImage = asyncHandler(async (req, res) => {
     if (!profileImage)
         throw new ApiError(502, "Error while uploading on profile image");
 
-    const isDeleted = await deleteFromCloudinary(req.user.image);
-    if (!isDeleted)
-        console.log(
-            "Sommething went wrong while deleting the old avatar from cloudinary"
-        );
+    if(req.user.image!==""){
+        const isDeleted = await deleteFromCloudinary(req.user.image);
+        if (!isDeleted)
+            console.log(
+                "Sommething went wrong while deleting the old avatar from cloudinary"
+            );
 
+    }
     const user = await User.findByIdAndUpdate(
         req.user?._id,
         {
@@ -152,7 +154,7 @@ const removeProfileImage = asyncHandler(async (req, res) => {
         req.user?._id,
         {
             $set: {
-                image: "",
+                image: null,
             },
         },
         { new: true }

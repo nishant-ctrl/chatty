@@ -9,7 +9,11 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { apiClient } from "@/lib/api-client";
-import { ADD_PROFILE_IMAGE_ROUTE, UPDATE_PROFILE_ROUTE } from "@/utils/constants";
+import {
+    ADD_PROFILE_IMAGE_ROUTE,
+    REMOVE_PROFILE_IMAGE_ROUTE,
+    UPDATE_PROFILE_ROUTE,
+} from "@/utils/constants";
 function Profile() {
     const navigate = useNavigate();
     const { userInfo, setUserInfo } = useAppStore();
@@ -26,6 +30,8 @@ function Profile() {
             setFirstName(userInfo.firstName);
             setLastName(userInfo.lastName);
             setSelectedColor(userInfo.color);
+            setImage(userInfo.image);
+            console.log("Image URL:", image);
         }
     }, [userInfo]);
 
@@ -74,19 +80,47 @@ function Profile() {
         fileInputRef.current.click();
     };
     const handleImageChange = async (e) => {
-        const file = e.target.files[0];
-        if(file){
-            const formData=new FormData();
-            formData.append("profile-image",file);
-            const response = await apiClient.post(ADD_PROFILE_IMAGE_ROUTE,{formData},{withCredentials:true})
-            if(response.status===200 && response.data?.data.image){
-                setUserInfo({...userInfo, image : response.data?.data.image})
-                toast.success("Image updated successfully.")
+        try {
+            const file = e.target.files[0];
+            if (file) {
+                const formData = new FormData();
+                formData.append("profile-image", file);
+                console.log(formData);
+                const response = await apiClient.post(
+                    ADD_PROFILE_IMAGE_ROUTE,
+                    formData,
+                    { withCredentials: true }
+                );
+                if (response.status === 200 && response.data?.data.image) {
+                    console.log(response.data.data);
+                    setUserInfo({
+                        ...userInfo,
+                        image: response.data?.data.image,
+                    });
+
+                    toast.success("Image updated successfully.");
+                }
             }
-            
+        } catch (error) {
+            console.log("Error while uploading profile image: ", error);
+            toast.error("Error while uploading profile image");
         }
     };
-    const handleDeleteImage = async () => {};
+    const handleDeleteImage = async () => {
+        try {
+            if (userInfo.image) {
+                const response = await apiClient.delete(
+                    REMOVE_PROFILE_IMAGE_ROUTE,
+                    { withCredentials: true }
+                );
+                if (response.status === 200) {
+                    setUserInfo(response.data.data);
+                    setImage(null)
+                    toast.success("Profile image deleted successfully");
+                }
+            }
+        } catch (error) {}
+    };
 
     return (
         <>
