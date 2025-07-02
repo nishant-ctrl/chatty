@@ -32,10 +32,10 @@ function ChatHeader() {
                         </Avatar>
                     </div>
                     <div>
-                      {
-                        selectedChatType === "contact" && (selectedChatData.firstName?`${selectedChatData.firstName} ${selectedChatData.lastName}`:`${selectedChatData.email}`)
-                      }
-
+                        {selectedChatType === "contact" &&
+                            (selectedChatData.firstName
+                                ? `${selectedChatData.firstName} ${selectedChatData.lastName}`
+                                : `${selectedChatData.email}`)}
                     </div>
                 </div>
                 <div className="flex items-center justify-center gap-5">
