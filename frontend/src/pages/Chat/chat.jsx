@@ -7,7 +7,7 @@ import EmptyChatContainer from "./components/emptyChatContainer";
 import ChatContainer from "./components/chatContainer";
 
 function Chat() {
-    const { userInfo } = useAppStore();
+    const { userInfo,selectedChatType } = useAppStore();
     const navigate = useNavigate();
     useEffect(() => {
         if (!userInfo?.profileSetup) {
@@ -15,11 +15,16 @@ function Chat() {
             navigate("/profile");
         }
     }, [userInfo, navigate]);
-    return <div>
-        <ContactsContainer />
-        <EmptyChatContainer />
-        <ChatContainer />
-    </div>;
+    return (
+        <div className="flex h-[100vh] text-white overflow-hidden">
+            <ContactsContainer />
+            {
+            selectedChatType===undefined ?<EmptyChatContainer />:<ChatContainer />
+            
+            }
+            
+        </div>
+    );
 }
 
 export default Chat;

@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 
 import Victory from "../../assets/victory.svg";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
@@ -15,8 +15,16 @@ function Auth() {
     const [password, setPassword] = useState("");
     const [confirmPassword, setConfirmPassword] = useState("");
 
-    const {userInfo, setUserInfo } = useAppStore();
-
+    const { userInfo, setUserInfo } = useAppStore();
+    useEffect(() => {
+        if (userInfo) {
+            if (userInfo.profileSetup) {
+                navigate("/chat");
+            } else {
+                navigate("/profile");
+            }
+        }
+    }, [userInfo, navigate]);
     const validateSignup = () => {
         if (!email.length) {
             toast.error("Email is required.");
@@ -59,21 +67,35 @@ function Auth() {
                 } else {
                     navigate("/profile");
                 }
+                toast.success(response.data.message);
             }
         }
     };
 
     const handleSignup = async () => {
         if (validateSignup()) {
-            const response = await apiClient.post(
-                SIGNUP_ROUTE,
-                { email, password },
-                { withCredentials: true }
-            );
-            // console.log(response);
-            if (response.status === 201) {
-                setUserInfo(response.data?.data);
-                navigate("/profile");
+            try {
+                const response = await apiClient.post(
+                    SIGNUP_ROUTE,
+                    { email, password },
+                    { withCredentials: true }
+                );
+                // console.log(response);
+                if (response.status === 201) {
+                    // setUserInfo(response.data?.data);
+                    // navigate("/profile");
+                    setEmail("");
+                    setPassword("");
+                    setConfirmPassword("");
+                    toast.success(response.data.message);
+                }
+            } catch (error) {
+                const status = error.response?.status;
+                const message =
+                    error.response?.data?.message || "Something went wrong";
+
+                console.error("API Error:", status, message);
+                toast.error(message);
             }
         }
     };

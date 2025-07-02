@@ -125,13 +125,12 @@ const addProfileImage = asyncHandler(async (req, res) => {
     if (!profileImage)
         throw new ApiError(502, "Error while uploading on profile image");
 
-    if(req.user.image!==""){
+    if (req.user.image !== "") {
         const isDeleted = await deleteFromCloudinary(req.user.image);
         if (!isDeleted)
             console.log(
                 "Sommething went wrong while deleting the old avatar from cloudinary"
             );
-
     }
     const user = await User.findByIdAndUpdate(
         req.user?._id,
@@ -170,6 +169,30 @@ const removeProfileImage = asyncHandler(async (req, res) => {
             new ApiResponse(200, user, "Profile Image deleted successfullu]y")
         );
 });
+
+const logoutUser = asyncHandler(async (req, res) => {
+    await User.findByIdAndUpdate(
+        req.user._id,
+        {
+            $unset: {
+                refreshToken: 1,
+            },
+        },
+        {
+            new: true,
+        }
+    );
+    const options = {
+        httpOnly: true,
+        secure: true,
+    };
+
+    return res
+        .status(200)
+        .clearCookie("accessToken", options)
+        .clearCookie("refreshToken", options)
+        .json(new ApiResponse(200, {}, "Userloggedout"));
+});
 export {
     registerUser,
     loginUser,
@@ -177,4 +200,5 @@ export {
     updateProfile,
     addProfileImage,
     removeProfileImage,
+    logoutUser,
 };
