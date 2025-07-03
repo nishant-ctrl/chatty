@@ -1,5 +1,6 @@
 import { Server as SocketIOServer } from "socket.io";
-
+import cookieParser from "cookie-parser";
+import jwt from "jsonwebtoken";
 const setupSocket = (server) => {
     const io = new SocketIOServer(server, {
         cors: {
@@ -8,7 +9,36 @@ const setupSocket = (server) => {
             credentials: true,
         },
     });
+    io.use((socket, next) => {
+        const cookieHeader = socket.handshake.headers.cookie;
 
+        if (!cookieHeader) {
+            console.log("❌ No cookie found in handshake");
+            return next(new Error("Authentication error"));
+        }
+
+        const cookies = cookieParser.JSONCookies(
+            cookieParser.parse(cookieHeader)
+        );
+        const token = cookies.accessToken;
+
+        if (!token) {
+            console.log("❌ No token in cookie");
+            return next(new Error("Authentication error"));
+        }
+
+        try {
+            const decodedToken = jwt.verify(
+                token,
+                process.env.ACCESS_TOKEN_SECRET
+            );
+            socket.userId = decodedToken._id;
+            return next();
+        } catch (err) {
+            console.log("❌ Invalid token", err.message);
+            return next(new Error("Authentication error"));
+        }
+    });
     const userSocketMap = new Map();
 
     const disconnect = (socket) => {
@@ -21,18 +51,30 @@ const setupSocket = (server) => {
         }
     };
 
+    // io.on("connection", (socket) => {
+    //     const userId = socket.handshake.query.userId;
+    //     if (userId) {
+    //         userSocketMap.set(userId, socket.id);
+    //         console.log(
+    //             `User connected: ${userId} with socket ID: ${socket.id}`
+    //         );
+    //     } else {
+    //         console.log("User ID not provided during connection.");
+    //     }
+
+    //     socket.on("disconnect", () => disconnect(socket));
+    // });
     io.on("connection", (socket) => {
-        const userId = socket.handshake.query.userId;
+        const userId=socket.userId
+
         if (userId) {
             userSocketMap.set(userId, socket.id);
             console.log(
-                `User connected: ${userId} with socket ID: ${socket.id}`
+                `User connected: ${userId} (socket ID: ${socket.id})`
             );
         } else {
-            console.log("User ID not provided during connection.");
+            console.log("No valid user ID from cookie");
         }
-
-        socket.on("disconnect", () => disconnect(socket));
     });
 };
 

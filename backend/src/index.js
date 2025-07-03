@@ -10,13 +10,13 @@ dotenv.config({
 });
 const port = process.env.PORT || 7272;
 
-const server = createServer(app)
+const httpServer = createServer(app)
 
 
 
 connectDB()
     .then(() => {
-        setupSocket(server)
+        setupSocket(httpServer);
         server.listen(port, () => {
             console.log(`Server is running at port: ${port}`);
         });
