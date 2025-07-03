@@ -57,11 +57,24 @@ const setupSocket = (server) => {
     const sendMessage=async (message)=>{
         const senderSocketId=userSocketMap.get(message.sender)
         const recipientSocketId=userSocketMap.get(message.recipient)
-        const createdMessage=await Messages.create(message);
-        const messageData = await Messages.findById(createdMessage._id)
-            .populate("sender", "id email firstName lastName image color")
-            .populate("recipient", "id email firstName lastName image color");
-       
+        // const createdMessage=await Messages.create(message);
+        // const messageData = await Messages.findById(createdMessage._id)
+        //     .populate("sender", "id email firstName lastName image color")
+        //     .populate("recipient", "id email firstName lastName image color");
+        const messageData = new Messages(message); // create instance
+        await messageData.save(); // save to DB
+
+        // populate sender and recipient in the same instance
+        await messageData.populate([
+            {
+                path: "sender",
+                select: "id email firstName lastName image color",
+            },
+            {
+                path: "recipient",
+                select: "id email firstName lastName image color",
+            },
+        ]);
         if(recipientSocketId){
             // console.log("Sent to recipient")
             io.to(recipientSocketId).emit("recieveMessage",messageData)
