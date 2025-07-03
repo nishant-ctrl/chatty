@@ -11,15 +11,16 @@ import {
 import { Navigate, RouterProvider } from "react-router";
 import { Toaster } from "./components/ui/sonner.jsx";
 import { useAppStore } from "./store";
+import { SocketProvider } from "./context/SocketContext";
 const PrivateRoute = ({ children }) => {
     const { userInfo } = useAppStore();
     const isAuthenticated = !!userInfo;
-    return isAuthenticated ?  children  : <Navigate to="/auth" />;
+    return isAuthenticated ? children : <Navigate to="/auth" />;
 };
 const AuthRoute = ({ children }) => {
     const { userInfo } = useAppStore();
     const isAuthenticated = !!userInfo;
-    return isAuthenticated ? <Navigate to="/chat" /> :  children ;
+    return isAuthenticated ? <Navigate to="/chat" /> : children;
 };
 
 const router = createBrowserRouter(
@@ -66,9 +67,9 @@ const router = createBrowserRouter(
 
 createRoot(document.getElementById("root")).render(
     // <StrictMode>
-    <>
+    <SocketProvider>
         <RouterProvider router={router} />
         <Toaster closeButton />
-    </>
+    </SocketProvider>
     // </StrictMode>
 );

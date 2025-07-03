@@ -30,10 +30,9 @@ function App() {
         } else {
             setLoading(false);
         }
-    }, [userInfo, setUserInfo]);
+    }, [ setUserInfo]);
 
-    if (loading)
-        return <LoadingSpinner />
+    if (loading) return <LoadingSpinner />;
     return <Outlet />;
 }
 

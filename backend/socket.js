@@ -1,6 +1,9 @@
 import { Server as SocketIOServer } from "socket.io";
-import cookieParser from "cookie-parser";
+import cookie from "cookie"
 import jwt from "jsonwebtoken";
+
+import {Messages} from "./src/models/messages.model.js"
+
 const setupSocket = (server) => {
     const io = new SocketIOServer(server, {
         cors: {
@@ -9,6 +12,9 @@ const setupSocket = (server) => {
             credentials: true,
         },
     });
+
+    const userSocketMap = new Map();
+
     io.use((socket, next) => {
         const cookieHeader = socket.handshake.headers.cookie;
 
@@ -17,9 +23,7 @@ const setupSocket = (server) => {
             return next(new Error("Authentication error"));
         }
 
-        const cookies = cookieParser.JSONCookies(
-            cookieParser.parse(cookieHeader)
-        );
+        const cookies = cookie.parse(cookieHeader);
         const token = cookies.accessToken;
 
         if (!token) {
@@ -39,7 +43,6 @@ const setupSocket = (server) => {
             return next(new Error("Authentication error"));
         }
     });
-    const userSocketMap = new Map();
 
     const disconnect = (socket) => {
         console.log(`Client Disconnect: ${socket.id}`);
@@ -50,6 +53,27 @@ const setupSocket = (server) => {
             }
         }
     };
+
+    const sendMessage=async (message)=>{
+        const senderSocketId=userSocketMap.get(message.sender)
+        const recipientSocketId=userSocketMap.get(message.recipient)
+        const createdMessage=await Messages.create(message);
+        const messageData = await Messages.findById(createdMessage._id)
+            .populate("sender", "id email firstName lastName image color")
+            .populate("recipient", "id email firstName lastName image color");
+       
+        if(recipientSocketId){
+            // console.log("Sent to recipient")
+            io.to(recipientSocketId).emit("recieveMessage",messageData)
+        }
+        if(senderSocketId){
+            // console.log("Sent to sender")
+            io.to(senderSocketId).emit("recieveMessage", messageData);
+        }
+    }
+
+
+
 
     // io.on("connection", (socket) => {
     //     const userId = socket.handshake.query.userId;
@@ -65,16 +89,21 @@ const setupSocket = (server) => {
     //     socket.on("disconnect", () => disconnect(socket));
     // });
     io.on("connection", (socket) => {
-        const userId=socket.userId
+        const userId = socket.userId;
 
         if (userId) {
             userSocketMap.set(userId, socket.id);
-            console.log(
-                `User connected: ${userId} (socket ID: ${socket.id})`
-            );
+            console.log(`User connected: ${userId} (socket ID: ${socket.id})`);
         } else {
             console.log("No valid user ID from cookie");
         }
+
+        socket.on("sendMessage", sendMessage);
+
+
+
+
+        socket.on("disconnect", () => disconnect(socket));
     });
 };
 
