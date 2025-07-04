@@ -112,10 +112,6 @@ const setupSocket = (server) => {
         }
 
         socket.on("sendMessage", sendMessage);
-
-
-
-
         socket.on("disconnect", () => disconnect(socket));
     });
 };

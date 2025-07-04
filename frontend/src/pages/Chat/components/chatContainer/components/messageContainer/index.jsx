@@ -1,4 +1,6 @@
+import { apiClient } from "@/lib/api-client";
 import { useAppStore } from "@/store";
+import { GET_ALL_MESSAGES_ROUTE } from "@/utils/constants";
 import moment from "moment";
 import React, { useEffect, useRef } from "react";
 
@@ -9,6 +11,7 @@ function MessageContainer() {
         selectedChatData,
         userInfo,
         selectedChatMessages,
+        setSelectedChatMessages,
     } = useAppStore();
     const renderMessages = () => {
         let lastDate = null;
@@ -62,7 +65,23 @@ function MessageContainer() {
         );
     };
 
-
+    useEffect(()=>{
+        const getMessages=async () => {
+            try {
+                const response=await apiClient.post(GET_ALL_MESSAGES_ROUTE,{id:selectedChatData._id},{withCredentials:true})
+                if(response.data.data){
+                    setSelectedChatMessages(response.data.data);
+                }
+            } catch (error) {
+                console.log("Error while fetching messages: ",error)
+            }
+        }
+        if(selectedChatData._id){
+            if(selectedChatType==="contact"){
+                getMessages()
+            }
+        }
+    },[selectedChatData,selectedChatType,setSelectedChatMessages])
     
     useEffect(() => {
         if (scrollRef.current) {

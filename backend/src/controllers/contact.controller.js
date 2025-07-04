@@ -37,4 +37,7 @@ const searchContacts = asyncHandler(async (req, res) => {
         .json(new ApiResponse(200, contacts, "Fetched searchTerm"));
 });
 
+
+
+
 export { searchContacts };
