@@ -22,7 +22,7 @@ const getMessages = asyncHandler(async (req, res) => {
                 recipient:userId1,
             },
         ]
-    }).select("-password").sort({timestamp:1});
+    }).select("-password").sort({createdAt:1});
     // console.log(messages)
     
     return res
