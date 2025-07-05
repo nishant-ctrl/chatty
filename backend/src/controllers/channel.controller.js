@@ -2,7 +2,7 @@ import { ApiError } from "../utils/ApiError.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { User } from "../models/user.model.js";
 import { Channel } from "../models/channel.model.js";
-import {ApiResponse} from "../utils/ApiResponse.js"
+import { ApiResponse } from "../utils/ApiResponse.js";
 const createChannel = asyncHandler(async (req, res) => {
     const { name, members } = req.body;
     if (!name) throw new ApiError(400, "Channel Name is required");
@@ -23,4 +23,21 @@ const createChannel = asyncHandler(async (req, res) => {
         .json(new ApiResponse(200, newChannel, "Channel created successfully"));
 });
 
-export { createChannel };
+const getUserChannels = asyncHandler(async (req, res) => {
+    const channels = await Channel.find({
+        $or: [
+            {
+                admin: req.user._id,
+            },
+            {
+                members: req.user._id,
+            },
+        ],
+    }).sort({ updatedAt: -1 });
+    console.log(channels)
+    return res
+        .status(200)
+        .json(new ApiResponse(200, channels, "Fetched all channels"));
+});
+
+export { createChannel, getUserChannels };

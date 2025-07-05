@@ -2,7 +2,7 @@ import React, { useEffect } from "react";
 import ProfileInfoComponent from "./components/profileInfo";
 import NewDM from "./components/newDm";
 import { apiClient } from "@/lib/api-client";
-import { GET_CONTACTS_FOR_DM_ROUTE } from "@/utils/constants";
+import { GET_CONTACTS_FOR_DM_ROUTE, GET_USER_CHANNELS_ROUTE } from "@/utils/constants";
 import { useAppStore } from "@/store";
 import {ContactList} from "@/components/contactList.jsx"
 import CreateChannel from "./components/createChannel";
@@ -12,6 +12,7 @@ function ContactsContainer() {
         setDirectMessagesContacts,
         selectedChatMessages,
         channels,
+        setChannels
     } = useAppStore();
     useEffect(() => {
         const getContacts = async () => {
@@ -26,8 +27,21 @@ function ContactsContainer() {
                 console.log("Error while fetching contacts for dm: ", error);
             }
         };
+        const getUserChannels = async () => {
+            try {
+                const response = await apiClient.get(
+                    GET_USER_CHANNELS_ROUTE,
+                    { withCredentials: true }
+                );
+                // console.log(response.data.data)
+                setChannels(response.data.data);
+            } catch (error) {
+                console.log("Error while fetching user channels: ", error);
+            }
+        };
         getContacts();
-    }, [selectedChatMessages]);
+        getUserChannels();
+    }, [setChannels,setDirectMessagesContacts]);
 
 
 

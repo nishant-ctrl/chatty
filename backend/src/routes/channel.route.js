@@ -1,10 +1,13 @@
 import { Router } from "express";
 import { verifyJWT } from "../middlewares/auth.middleware.js";
 import { upload } from "../middlewares/multer.middleware.js";
-import {createChannel} from "../controllers/channel.controller.js"
+import {
+    createChannel,
+    getUserChannels,
+} from "../controllers/channel.controller.js";
 const router = Router();
 
-router.route("/craete-channel").post(verifyJWT, createChannel);
-// router.route("/upload-file").post(verifyJWT, upload.single("file"), uploadFile);
+router.route("/create-channel").post(verifyJWT, createChannel);
+router.route("/get-user-channels").get(verifyJWT, getUserChannels);
 
 export default router;
