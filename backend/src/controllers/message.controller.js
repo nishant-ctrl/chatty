@@ -38,7 +38,7 @@ const uploadFile=asyncHandler(async (req,res) => {
     const file = await uploadOnCloudinary(avatarLocalPath);
     if (!file)
         throw new ApiError(502, "Error while uploading on profile image");
-    console.log(file)
+    // console.log(file)
     return res
         .status(200)
         .json(

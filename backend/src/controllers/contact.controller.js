@@ -39,7 +39,6 @@ const searchContacts = asyncHandler(async (req, res) => {
 });
 
 const getContactsForDmList = asyncHandler(async (req, res) => {
-    // const userId = new mongoose.Schema.Types.ObjectId(req.user._id);
     const userId = new mongoose.Types.ObjectId(req.user._id);
     const contacts = await Messages.aggregate([
         {
@@ -101,5 +100,18 @@ const getContactsForDmList = asyncHandler(async (req, res) => {
         .status(200)
         .json(new ApiResponse(200, contacts, "Fetched searchTerm"));
 });
+const getAllContacts = asyncHandler(async (req, res) => {
+    const users = await User.find({
+        _id: { $ne: req.user._id },
+    },"firstName lastName _id email");
+    const contacts=users.map((user)=>({
+        label:user.firstName?`${user.firstName} ${user.lastName}`:`${user.email}`,
+        value:user._id
+    }))
+    // console.log(contacts)
+    return res
+        .status(200)
+        .json(new ApiResponse(200, contacts, "Fetched all contacts"));
+});
 
-export { searchContacts, getContactsForDmList };
+export { searchContacts, getContactsForDmList, getAllContacts };

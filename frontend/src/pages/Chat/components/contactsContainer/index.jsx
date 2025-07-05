@@ -5,11 +5,13 @@ import { apiClient } from "@/lib/api-client";
 import { GET_CONTACTS_FOR_DM_ROUTE } from "@/utils/constants";
 import { useAppStore } from "@/store";
 import {ContactList} from "@/components/contactList.jsx"
+import CreateChannel from "./components/createChannel";
 function ContactsContainer() {
     const {
         directMessagesContacts,
         setDirectMessagesContacts,
         selectedChatMessages,
+        channels,
     } = useAppStore();
     useEffect(() => {
         const getContacts = async () => {
@@ -46,6 +48,10 @@ function ContactsContainer() {
             <div className="my-5">
                 <div className="flex pr-10 justify-between items-center">
                     <Title text="Channels" />
+                    <CreateChannel />
+                </div>
+                <div className="max-h-[38vh] overflow-auto scrollbar-hidden">
+                    <ContactList contacts={channels} isChannel={true} />
                 </div>
             </div>
             <ProfileInfoComponent />

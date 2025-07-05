@@ -56,8 +56,7 @@ function MessageContainer() {
                     setFileDownloadProgress(percentCompleted);
                 },
             });
-            setIsDownloading(false);
-
+            
             const blob = new Blob([response.data], {
                 type: response.data.type,
             });
@@ -69,6 +68,8 @@ function MessageContainer() {
             link.click();
             document.body.removeChild(link);
             window.URL.revokeObjectURL(downloadUrl);
+            setIsDownloading(false);
+            setFileDownloadProgress(0);
         } catch (error) {
             console.error("Download failed:", error.message);
             setIsDownloading(false);
