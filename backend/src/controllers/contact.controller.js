@@ -41,7 +41,6 @@ const searchContacts = asyncHandler(async (req, res) => {
 const getContactsForDmList = asyncHandler(async (req, res) => {
     // const userId = new mongoose.Schema.Types.ObjectId(req.user._id);
     const userId = new mongoose.Types.ObjectId(req.user._id);
-    console.log("REACHED ",req.user._id)
     const contacts = await Messages.aggregate([
         {
             $match: {

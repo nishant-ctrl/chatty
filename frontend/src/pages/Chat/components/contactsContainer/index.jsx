@@ -6,20 +6,26 @@ import { GET_CONTACTS_FOR_DM_ROUTE } from "@/utils/constants";
 import { useAppStore } from "@/store";
 import {ContactList} from "@/components/contactList.jsx"
 function ContactsContainer() {
-    const { directMessagesContacts, setDirectMessagesContacts } = useAppStore();
-    useEffect(()=>{
-        const getContacts=async () => {
+    const {
+        directMessagesContacts,
+        setDirectMessagesContacts,
+        selectedChatMessages,
+    } = useAppStore();
+    useEffect(() => {
+        const getContacts = async () => {
             try {
-                const response = await apiClient.get(GET_CONTACTS_FOR_DM_ROUTE,{withCredentials:true})
+                const response = await apiClient.get(
+                    GET_CONTACTS_FOR_DM_ROUTE,
+                    { withCredentials: true }
+                );
                 // console.log(response.data.data)
                 setDirectMessagesContacts(response.data.data);
             } catch (error) {
-                console.log("Error while fetching contacts for dm: ",error)
+                console.log("Error while fetching contacts for dm: ", error);
             }
-
-        }
-        getContacts()
-    },[])
+        };
+        getContacts();
+    }, [selectedChatMessages]);
 
 
 

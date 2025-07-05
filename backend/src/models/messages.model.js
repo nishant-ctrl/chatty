@@ -30,6 +30,12 @@ const messagesSchema = new Schema(
                 return this.messageType === "file";
             },
         },
+        fileName: {
+            type: String,
+            required: function () {
+                return this.messageType === "file";
+            },
+        },
     },
     { timestamps: true }
 );
