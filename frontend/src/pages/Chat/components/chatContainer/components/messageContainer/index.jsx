@@ -26,8 +26,6 @@ function MessageContainer() {
         );
     }
 
-
-
     async function downloadFile(url, filenameWithoutExtension = "file") {
         function getFileExtensionFromUrl(url) {
             try {
@@ -56,7 +54,7 @@ function MessageContainer() {
                     setFileDownloadProgress(percentCompleted);
                 },
             });
-            
+
             const blob = new Blob([response.data], {
                 type: response.data.type,
             });
@@ -76,8 +74,6 @@ function MessageContainer() {
         }
     }
 
-
-
     const renderMessages = () => {
         let lastDate = null;
         return selectedChatMessages.map((message, index) => {
@@ -94,9 +90,14 @@ function MessageContainer() {
 
                     {selectedChatType === "contact" &&
                         renderDmMessages(message)}
+                    {selectedChatType === "channel" &&
+                        renderChannelMessages(message)}
                 </div>
             );
         });
+    };
+    const renderChannelMessages = (message) => {
+        
     };
     const renderDmMessages = (message) => {
         const { userInfo } = useAppStore.getState();

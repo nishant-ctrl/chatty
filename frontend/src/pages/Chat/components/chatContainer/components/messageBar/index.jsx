@@ -19,45 +19,60 @@ function MessageBar() {
         setFileUploadProgress,
     } = useAppStore();
     const [message, setMessage] = useState("");
-    const socket=useSocket()
+    const socket = useSocket();
     const handleAddEmoji = (emoji) => {
         setMessage((msg) => msg + emoji.emoji);
     };
     const handleSentMessage = async () => {
-        if(selectedChatType==="contact"){
-            socket.emit("sendMessage",{
+        if (selectedChatType === "contact") {
+            socket.emit("sendMessage", {
                 sender: userInfo._id,
-                content:message,
-                recipient:selectedChatData._id,
-                messageType:"text",
-                fileUrl:undefined,
+                content: message,
+                recipient: selectedChatData._id,
+                messageType: "text",
+                fileUrl: undefined,
             });
-            setMessage("")
+        } else if (selectedChatType === "channel") {
+            socket.emit("sendChannelMessage", {
+                sender: userInfo._id,
+                content: message,
+                messageType: "text",
+                fileUrl: undefined,
+                channelId: selectedChatData._id,
+            });
         }
+        setMessage("");
     };
 
-    const handleAttachmentClick=() => {
-        if(fileInputRef.current){
-            fileInputRef.current.click()
+    const handleAttachmentClick = () => {
+        if (fileInputRef.current) {
+            fileInputRef.current.click();
         }
-    }
-    const handleAttactmentChange=async (e) => {
+    };
+    const handleAttactmentChange = async (e) => {
         try {
-            const file=e.target.files[0]
+            const file = e.target.files[0];
             // console.log(file)
-            if(file){
-                const formData=new FormData()
-                formData.append("file",file)
-                setIsUploading(true)
-                setFileUploadProgress(0)
-                const response = await apiClient.post(UPLOAD_FILE_ROUTE,formData,{withCredentials:true,
-                    onUploadProgress:(data)=>{
-                        setFileUploadProgress(Math.round(100*data.loaded)/data.total)
+            if (file) {
+                const formData = new FormData();
+                formData.append("file", file);
+                setIsUploading(true);
+                setFileUploadProgress(0);
+                const response = await apiClient.post(
+                    UPLOAD_FILE_ROUTE,
+                    formData,
+                    {
+                        withCredentials: true,
+                        onUploadProgress: (data) => {
+                            setFileUploadProgress(
+                                Math.round(100 * data.loaded) / data.total
+                            );
+                        },
                     }
-                })
-                setIsUploading(false)
-                if(response.status===200 && response.data.data.fileUrl){
-                    if(selectedChatType==="contact"){
+                );
+                setIsUploading(false);
+                if (response.status === 200 && response.data.data.fileUrl) {
+                    if (selectedChatType === "contact") {
                         socket.emit("sendMessage", {
                             sender: userInfo._id,
                             content: undefined,
@@ -66,16 +81,23 @@ function MessageBar() {
                             fileUrl: response.data.data.fileUrl,
                             fileName: response.data.data.fileName,
                         });
+                    } else if (selectedChatType === "channel") {
+                        socket.emit("sendChannelMessage", {
+                            sender: userInfo._id,
+                            content: undefined,
+                            messageType: "file",
+                            fileUrl: response.data.data.fileUrl,
+                            fileName: response.data.data.fileName,
+                            channelId: selectedChatData._id,
+                        });
                     }
                 }
             }
-            
         } catch (error) {
-            console.log("Error while ulpoading file: ",error)
-            setIsUploading(false)
+            console.log("Error while ulpoading file: ", error);
+            setIsUploading(false);
         }
-    }
-
+    };
 
     useEffect(() => {
         function handleClickOutside(e) {
@@ -107,12 +129,13 @@ function MessageBar() {
                 >
                     <GrAttachment className="text-2xl" />
                 </button>
-                <input 
-                type="file"
-                className="hidden"
-                ref={fileInputRef}
-                onChange={(e)=>{handleAttactmentChange(e)}}
-
+                <input
+                    type="file"
+                    className="hidden"
+                    ref={fileInputRef}
+                    onChange={(e) => {
+                        handleAttactmentChange(e);
+                    }}
                 />
                 <div className="relative ">
                     <button

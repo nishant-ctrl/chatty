@@ -34,7 +34,7 @@ const getUserChannels = asyncHandler(async (req, res) => {
             },
         ],
     }).sort({ updatedAt: -1 });
-    console.log(channels)
+    // console.log(channels)
     return res
         .status(200)
         .json(new ApiResponse(200, channels, "Fetched all channels"));

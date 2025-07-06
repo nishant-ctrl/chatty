@@ -1,9 +1,9 @@
 import { Server as SocketIOServer } from "socket.io";
-import cookie from "cookie"
+import cookie from "cookie";
 import jwt from "jsonwebtoken";
 
-import {Messages} from "./src/models/messages.model.js"
-
+import { Messages } from "./src/models/messages.model.js";
+import {Channel} from "./src/models/channel.model.js"
 const setupSocket = (server) => {
     const io = new SocketIOServer(server, {
         cors: {
@@ -54,17 +54,11 @@ const setupSocket = (server) => {
         }
     };
 
-    const sendMessage=async (message)=>{
-        const senderSocketId=userSocketMap.get(message.sender)
-        const recipientSocketId=userSocketMap.get(message.recipient)
-        // const createdMessage=await Messages.create(message);
-        // const messageData = await Messages.findById(createdMessage._id)
-        //     .populate("sender", "id email firstName lastName image color")
-        //     .populate("recipient", "id email firstName lastName image color");
+    const sendMessage = async (message) => {
+        const senderSocketId = userSocketMap.get(message.sender);
+        const recipientSocketId = userSocketMap.get(message.recipient);
         const messageData = new Messages(message); // create instance
-        await messageData.save(); // save to DB
-
-        // populate sender and recipient in the same instance
+        await messageData.save();
         await messageData.populate([
             {
                 path: "sender",
@@ -75,32 +69,56 @@ const setupSocket = (server) => {
                 select: "id email firstName lastName image color",
             },
         ]);
-        if(recipientSocketId){
+        if (recipientSocketId) {
             // console.log("Sent to recipient")
-            io.to(recipientSocketId).emit("recieveMessage",messageData)
+            io.to(recipientSocketId).emit("recieveMessage", messageData);
         }
-        if(senderSocketId){
+        if (senderSocketId) {
             // console.log("Sent to sender")
             io.to(senderSocketId).emit("recieveMessage", messageData);
         }
-    }
+    };
+    const sendChannelMessage = async (message) => {
+        const { channelId, sender, content, messageType, fileUrl, fileName } =
+            message;
+        const createdMessage = await Messages.create({
+            sender,
+            recipient: null,
+            content,
+            messageType,
+            fileUrl,
+            fileName,
+        });
+        const messageData = await Messages.findById(createdMessage._id)
+            .populate("sender", "id firstName lastName image color")
+            .exec();
+        await Channel.findByIdAndUpdate(channelId,{
+            $push:{
+                messages:createdMessage._id,
+            }
+        })  
+        const channel=await Channel.findById(channelId).populate("members")
+        const finalData = {...messageData._doc,channelId:channel._id}
+        if(channel && channel.members){
+            channel.members.forEach((member)=>{
+                const memberSocketId=userSocketMap.get(member._id.toString())
+                if(memberSocketId){
+                    io.to(memberSocketId).emit(
+                        "recieveChannelMessage",
+                        finalData
+                    );
+                }
+            })
+            const adminSocketId=userSocketMap.get(channel.admin._id.toString())
+            if (adminSocketId) {
+                io.to(adminSocketId).emit(
+                    "recieveChannelMessage",
+                    finalData
+                );
+            }
+        }
+    };
 
-
-
-
-    // io.on("connection", (socket) => {
-    //     const userId = socket.handshake.query.userId;
-    //     if (userId) {
-    //         userSocketMap.set(userId, socket.id);
-    //         console.log(
-    //             `User connected: ${userId} with socket ID: ${socket.id}`
-    //         );
-    //     } else {
-    //         console.log("User ID not provided during connection.");
-    //     }
-
-    //     socket.on("disconnect", () => disconnect(socket));
-    // });
     io.on("connection", (socket) => {
         const userId = socket.userId;
 
@@ -112,6 +130,7 @@ const setupSocket = (server) => {
         }
 
         socket.on("sendMessage", sendMessage);
+        socket.on("sendChannelMessage", sendChannelMessage);
         socket.on("disconnect", () => disconnect(socket));
     });
 };
