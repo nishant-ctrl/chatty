@@ -40,4 +40,22 @@ const getUserChannels = asyncHandler(async (req, res) => {
         .json(new ApiResponse(200, channels, "Fetched all channels"));
 });
 
-export { createChannel, getUserChannels };
+const getChannelMessages = asyncHandler(async (req, res) => {
+    const { channelId } = req.params;
+    if (!channelId) throw new ApiError(400, "Channel id is required.");
+    const channel = await Channel.findById(channelId).populate({
+        path: "messages",
+        populate: {
+            path: "sender",
+            select: "firstName lastName email _id image color",
+        },
+    });
+    if (!channel) throw new ApiError(404, "Channel not found");
+    return res
+        .status(200)
+        .json(
+            new ApiResponse(200, channel.messages, "Fetched channel messages")
+        );
+});
+
+export { createChannel, getUserChannels, getChannelMessages };
