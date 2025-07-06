@@ -41,7 +41,7 @@ function ContactsContainer() {
         };
         getContacts();
         getUserChannels();
-    }, [setChannels,setDirectMessagesContacts]);
+    }, [setChannels,setDirectMessagesContacts,channels]);
 
 
 

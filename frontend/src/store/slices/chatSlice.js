@@ -7,8 +7,8 @@ export const createChatSlice = (set, get) => ({
     isDownloading: false,
     fileUploadProgress: 0,
     fileDownloadProgress: 0,
-    channels:[],
-    setChannels:(channels)=>set({channels}),
+    channels: [],
+    setChannels: (channels) => set({ channels }),
     setIsUploading: (isUploading) => set({ isUploading }),
     setIsDownloading: (isDownloading) => set({ isDownloading }),
     setFileUploadProgress: (fileUploadProgress) => set({ fileUploadProgress }),
@@ -20,9 +20,9 @@ export const createChatSlice = (set, get) => ({
     setSelectedChatData: (selectedChatData) => set({ selectedChatData }),
     setSelectedChatMessages: (selectedChatMessages) =>
         set({ selectedChatMessages }),
-    addChannel:(channel)=>{
+    addChannel: (channel) => {
         const channels = get().channels;
-        set({channels:[channel,...channels]})
+        set({ channels: [channel, ...channels] });
     },
     addMessage: (message) => {
         const selectedChatMessages = get().selectedChatMessages;
@@ -46,6 +46,38 @@ export const createChatSlice = (set, get) => ({
                 },
             ],
         });
+    },
+    addContactsInDMCOntacts: (message) => {
+        const userId = get().userInfo._id;
+        const fromId =
+            message.sender._id === userId
+                ? message.recipient._id
+                : message.sender._id;
+        const fromData =
+            message.sender._id === userId ? message.recipient : message.sender;
+        const dmContacts = get().directMessagesContacts;
+        const data = dmContacts.find((contact) => contact._id === fromId);
+        const index = dmContacts.findIndex((contact) => contact._id === fromId);
+        if (index !== -1 && index !== undefined) {
+            dmContacts.splice(index, 1);
+            dmContacts.unshift(data);
+        } else {
+            dmContacts.unshift(fromData);
+        }
+        set({ directMessagesContacts: dmContacts });
+    },
+    addChannelInChannelList: (message) => {
+        const channels = get.channels;
+        const data = channels.find(
+            (channel) => channel._id === message.channelId
+        );
+        const index = channels.findIndex(
+            (channel) => channel._id === message.channelId
+        );
+        if (index !== -1 && index !== undefined) {
+            channels.splice(index, 1);
+            channels.unShift(data);
+        }
     },
     closeChat: () =>
         set({
