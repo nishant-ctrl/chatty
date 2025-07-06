@@ -4,6 +4,7 @@ import jwt from "jsonwebtoken";
 
 import { Messages } from "./src/models/messages.model.js";
 import {Channel} from "./src/models/channel.model.js"
+import {User} from "./src/models/user.model.js"
 const setupSocket = (server) => {
     const io = new SocketIOServer(server, {
         cors: {
@@ -78,46 +79,124 @@ const setupSocket = (server) => {
             io.to(senderSocketId).emit("recieveMessage", messageData);
         }
     };
+    // const sendChannelMessage = async (message) => {
+    //     const { channelId, sender, content, messageType, fileUrl, fileName } =
+    //         message;
+    //     const createdMessage = await Messages.create({
+    //         sender,
+    //         recipient: null,
+    //         content,
+    //         messageType,
+    //         fileUrl,
+    //         fileName,
+    //     });
+    //     const messageData = await Messages.findById(createdMessage._id)
+    //         .populate("sender", "id firstName lastName image color")
+    //         .exec();
+    //     await Channel.findByIdAndUpdate(channelId,{
+    //         $push:{
+    //             messages:createdMessage._id,
+    //         }
+    //     })  
+    //     const channel=await Channel.findById(channelId).populate("members")
+    //     const finalData = {...messageData._doc,channelId:channel._id}
+    //     if(channel && channel.members){
+    //         channel.members.forEach((member)=>{
+    //             const memberSocketId=userSocketMap.get(member._id.toString())
+    //             if(memberSocketId){
+    //                 io.to(memberSocketId).emit(
+    //                     "recieveChannelMessage",
+    //                     finalData
+    //                 );
+    //             }
+    //         })
+    //         const adminSocketId=userSocketMap.get(channel.admin._id.toString())
+    //         if (adminSocketId) {
+    //             io.to(adminSocketId).emit(
+    //                 "recieveChannelMessage",
+    //                 finalData
+    //             );
+    //         }
+    //     }
+    // };
+
+
     const sendChannelMessage = async (message) => {
-        const { channelId, sender, content, messageType, fileUrl, fileName } =
-            message;
-        const createdMessage = await Messages.create({
-            sender,
-            recipient: null,
-            content,
-            messageType,
-            fileUrl,
-            fileName,
-        });
-        const messageData = await Messages.findById(createdMessage._id)
-            .populate("sender", "id firstName lastName image color")
-            .exec();
-        await Channel.findByIdAndUpdate(channelId,{
-            $push:{
-                messages:createdMessage._id,
+        try {
+            const {
+                channelId,
+                sender,
+                content,
+                messageType,
+                fileUrl,
+                fileName,
+            } = message;
+
+            // Step 1: Create message (skip extra fetch)
+            const createdMessage = await Messages.create({
+                sender,
+                recipient: null,
+                content,
+                messageType,
+                fileUrl,
+                fileName,
+            });
+
+            // Step 2: Add message to channel & get only member IDs
+            const channel = await Channel.findByIdAndUpdate(
+                channelId,
+                { $addToSet: { messages: createdMessage._id } },
+                { new: true }
+            )
+                .select("_id admin members")
+                .lean();
+
+            if (!channel) return;
+
+            // Step 3: Fetch sender data (lightweight)
+            const senderData = await User.findById(sender)
+                .select("_id firstName lastName image color")
+                .lean();
+
+            // Step 4: Prepare the message payload
+            const finalData = {
+                _id: createdMessage._id,
+                sender: senderData,
+                recipient: null,
+                content,
+                messageType,
+                fileUrl,
+                fileName,
+                channelId: channel._id,
+                createdAt: createdMessage.createdAt,
+            };
+
+            // Step 5: Collect all socketIds in a Set (deduplicated)
+            const socketIds = new Set();
+
+            // Add member sockets
+            for (const member of channel.members) {
+                const sid = userSocketMap.get(member.toString());
+                if (sid) socketIds.add(sid);
             }
-        })  
-        const channel=await Channel.findById(channelId).populate("members")
-        const finalData = {...messageData._doc,channelId:channel._id}
-        if(channel && channel.members){
-            channel.members.forEach((member)=>{
-                const memberSocketId=userSocketMap.get(member._id.toString())
-                if(memberSocketId){
-                    io.to(memberSocketId).emit(
-                        "recieveChannelMessage",
-                        finalData
-                    );
-                }
-            })
-            const adminSocketId=userSocketMap.get(channel.admin._id.toString())
-            if (adminSocketId) {
-                io.to(adminSocketId).emit(
-                    "recieveChannelMessage",
-                    finalData
-                );
+
+            // Add admin socket
+            const adminId = channel.admin?.toString();
+            if (adminId) {
+                const sid = userSocketMap.get(adminId);
+                if (sid) socketIds.add(sid);
             }
+
+            // Step 6: Emit to all socket IDs in one go
+            for (const sid of socketIds) {
+                io.to(sid).emit("recieveChannelMessage", finalData);
+            }
+        } catch (err) {
+            console.error("sendChannelMessage error:", err);
         }
     };
+    
+
 
     io.on("connection", (socket) => {
         const userId = socket.userId;
