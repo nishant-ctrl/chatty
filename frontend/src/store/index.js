@@ -5,3 +5,4 @@ export const useAppStore = create()((...a) => ({
     ...createAuthSlice(...a),
     ...createChatSlice(...a),
 }));
+
